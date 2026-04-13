@@ -1,11 +1,10 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_client.dart';
 import 'auth_state.dart';
 
 class AuthService {
-  static final instance = AuthService._internal();
-  AuthService._internal();
+  static final instance = AuthService._();
+  AuthService._();
 
   String? _accessToken;
   String? _refreshToken;
@@ -16,60 +15,97 @@ class AuthService {
   String get role => _user?["role"] ?? "guest";
   bool get isLoggedIn => _accessToken != null;
 
- static const baseUrl = "https://tecnired-api.onrender.com";
-
+  // 🔐 LOGIN: Autentica y notifica a la UI
   Future<bool> login(String email, String password) async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/auth/login"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
-    );
-    if (res.statusCode != 200) return false;
-    final data = jsonDecode(res.body);
-    _accessToken = data["access_token"];
-    _refreshToken = data["refresh_token"];
-    await _save();
-    await fetchProfile();
-    AuthState.instance.notify();
-    return true;
+    try {
+      final res = await ApiClient.post(
+        "/auth/login",
+        {"email": email, "password": password},
+        isAuthRequest: true,
+      );
+
+      if (res == null || res["access_token"] == null) return false;
+
+      _accessToken = res["access_token"];
+      _refreshToken = res["refresh_token"];
+
+      await _save();
+      await loadProfile();
+
+      AuthState.instance.notify(); 
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  Future<void> fetchProfile() async {
-    final res = await http.get(Uri.parse("$baseUrl/auth/me"),
-      headers: {"Authorization": "Bearer $_accessToken"});
-    if (res.statusCode == 200) {
-      _user = jsonDecode(res.body);
-    } else { await logout(); }
+  // 👤 PROFILE: Obtiene datos del usuario actual
+  Future<void> loadProfile() async {
+    try {
+      final res = await ApiClient.get("/auth/me");
+      if (res != null && res["role"] != null) {
+        _user = res;
+      } else {
+        await logout();
+      }
+    } catch (e) {
+      await logout();
+    }
   }
 
+  // 🔄 REFRESH TOKEN: Renovación automática de sesión
   Future<bool> refresh() async {
-    final res = await http.post(Uri.parse("$baseUrl/auth/refresh"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"refresh_token": _refreshToken}));
-    if (res.statusCode != 200) return false;
-    _accessToken = jsonDecode(res.body)["access_token"];
-    await _save();
-    return true;
+    if (_refreshToken == null) return false;
+    try {
+      final res = await ApiClient.post(
+        "/auth/refresh",
+        {"refresh_token": _refreshToken},
+        isAuthRequest: true,
+      );
+
+      if (res == null || res["access_token"] == null) return false;
+
+      _accessToken = res["access_token"];
+      await _save();
+      return true;
+    } catch (e) {
+      await logout();
+      return false;
+    }
   }
 
+  // 💾 RESTORE SESSION: Se ejecuta al abrir la App
   Future<void> loadSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    _accessToken = prefs.getString("access");
-    _refreshToken = prefs.getString("refresh");
-    if (isLoggedIn) await fetchProfile();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _accessToken = prefs.getString("access");
+      _refreshToken = prefs.getString("refresh");
+
+      if (isLoggedIn) {
+        await loadProfile();
+      }
+    } catch (e) {
+      await logout();
+    }
     AuthState.instance.notify();
   }
 
+  // 🚪 LOGOUT: Limpieza total
   Future<void> logout() async {
-    _accessToken = _refreshToken = _user = null;
+    _accessToken = null;
+    _refreshToken = null;
+    _user = null;
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.clear(); // Borra todo de forma segura
+
     AuthState.instance.notify();
   }
 
+  // 💾 SAVE TOKENS: Persistencia local
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("access", _accessToken!);
-    await prefs.setString("refresh", _refreshToken!);
+    if (_accessToken != null) await prefs.setString("access", _accessToken!);
+    if (_refreshToken != null) await prefs.setString("refresh", _refreshToken!);
   }
 }

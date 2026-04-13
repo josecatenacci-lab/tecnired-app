@@ -1,30 +1,37 @@
 name: tecnired
-description: "App GPS Enterprise con JWT"
-publish_to: 'none'
+description: "App GPS Enterprise con autenticación JWT y RBAC"
+publish_to: 'none' # Evita que se publique en pub.dev accidentalmente
 
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.4
+  sdk: '>=3.1.0 <4.0.0' # Rango compatible con Flutter 3.11+
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # 🌐 HTTP requests
-  http: ^0.13.6
+  # 🌐 Comunicación con el Backend en Render (Actualizado a v1.1.0)
+  http: ^1.1.0
 
-  # 💾 Persistencia de sesión (TOKEN)
+  # 💾 Persistencia de tokens de sesión
   shared_preferences: ^2.2.2
 
-  # 🎨 Iconos iOS
+  # 🎨 Iconos estándar
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^6.0.0
+  # Análisis de código para mantenerlo limpio
+  flutter_lints: ^3.0.0
 
 flutter:
+  # Habilita el uso de Material Design 3
   uses-material-design: true
+
+  # Si en el futuro agregas imágenes en la carpeta 'assets', 
+  # deberás desbloquear las líneas de abajo:
+  # assets:
+  #   - assets/logo.png
