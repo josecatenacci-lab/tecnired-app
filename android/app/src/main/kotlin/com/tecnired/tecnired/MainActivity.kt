@@ -1,4 +1,4 @@
-package com.example.tecnired
+package com.tecnired.app
 
 import io.flutter.embedding.android.FlutterActivity
 

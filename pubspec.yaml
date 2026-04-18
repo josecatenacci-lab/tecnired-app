@@ -1,37 +1,69 @@
 name: tecnired
-description: "App GPS Enterprise con autenticación JWT y RBAC"
-publish_to: 'none' # Evita que se publique en pub.dev accidentalmente
+description: "Plataforma técnica para especialistas en GPS y telemática."
+
+# Evita que el paquete se publique en pub.dev por accidente
+publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.1.0 <4.0.0' # Rango compatible con Flutter 3.11+
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # 🌐 Comunicación con el Backend en Render (Actualizado a v1.1.0)
-  http: ^1.1.0
-
-  # 💾 Persistencia de tokens de sesión
+  # --- GESTIÓN DE ESTADO Y ARQUITECTURA ---
+  provider: ^6.1.1
+  
+  # --- COMUNICACIÓN CON EL BACKEND (RENDER) ---
+  dio: ^5.4.1
+  http: ^1.2.0
+  
+  # --- PERSISTENCIA DE DATOS ---
   shared_preferences: ^2.2.2
-
-  # 🎨 Iconos estándar
-  cupertino_icons: ^1.0.8
+  
+  # --- MULTIMEDIA Y HARDWARE ---
+  image_picker: ^1.0.7
+  camera: ^0.10.5+9
+  path_provider: ^2.1.2 
+  
+  # --- INTERFAZ DE USUARIO Y EXPERIENCIA ---
+  shimmer: ^3.0.0
+  intl: ^0.19.0
+  cupertino_icons: ^1.0.6 
+  
+  # --- NOTIFICACIONES Y CONECTIVIDAD ---
+  flutter_local_notifications: ^17.0.0
+  connectivity_plus: ^5.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # Análisis de código para mantenerlo limpio
   flutter_lints: ^3.0.0
+  # Generador automático de iconos
+  flutter_launcher_icons: ^0.13.1
+
+# CONFIGURACIÓN DEL ICONO DE LA APP (BLINDADA)
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true # Blindaje: Apple no permite transparencias en el icono
+  image_path: "assets/images/app_logo.png"
+  min_sdk_android: 21 
+  adaptive_icon_background: "#FFFFFF" 
+  adaptive_icon_foreground: "assets/images/app_logo.png"
 
 flutter:
-  # Habilita el uso de Material Design 3
   uses-material-design: true
 
-  # Si en el futuro agregas imágenes en la carpeta 'assets', 
-  # deberás desbloquear las líneas de abajo:
-  # assets:
-  #   - assets/logo.png
+  # CONFIGURACIÓN DE ASSETS (RECURSIVA)
+  assets:
+    - assets/images/
+    - assets/icons/
+    
+  # Descomentar si instalas la fuente Michroma para el estilo industrial
+  # fonts:
+  #   - family: Michroma
+  #     fonts:
+  #       - asset: assets/fonts/Michroma-Regular.ttf
